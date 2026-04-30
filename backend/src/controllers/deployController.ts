@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { pushConfiguration } from '../services/sshService';
 import { DeploymentLog } from '../models/DeploymentLog';
+import { generateWithAI } from '../services/openRouter';
 
 export const deployConfigurations = async (req: Request, res: Response) => {
   const { devices, credentials } = req.body;
@@ -14,28 +15,50 @@ export const deployConfigurations = async (req: Request, res: Response) => {
     const credForDevice = credentials[device.id] || credentials['default'];
     let status: 'success' | 'failed' = 'failed';
     let output = '';
+    let currentConfig = device.config;
+    let attempts = 0;
+    const MAX_REMEDIATION_ATTEMPTS = 2;
 
-    try {
-      // Execute the SSH Push
-      output = await pushConfiguration(
-        device.ip,
-        22,
-        credForDevice.username,
-        credForDevice.password,
-        credForDevice.privateKey,
-        device.config
-      );
-      
-      // Determine if there were invalid input errors in the device terminal
-      if (output.toLowerCase().includes('% invalid input') || output.toLowerCase().includes('error')) {
+    while (attempts < MAX_REMEDIATION_ATTEMPTS) {
+      try {
+        // Execute the SSH Push
+        output = await pushConfiguration(
+          device.ip,
+          22,
+          credForDevice.username,
+          credForDevice.password,
+          credForDevice.privateKey,
+          currentConfig
+        );
+        
+        // Determine if there were invalid input errors in the device terminal
+        if (output.toLowerCase().includes('% invalid input') || output.toLowerCase().includes('error')) {
+          console.log(`[Remediation] Error detected for ${device.ip}. Attempting AI fix (Attempt ${attempts + 1}/${MAX_REMEDIATION_ATTEMPTS})...`);
+          
+          const systemPrompt = `You are an expert network engineer. The previous configuration push failed with terminal errors.
+Fix the requested configuration based on the provided error output. 
+Output ONLY the corrected raw configuration text. No markdown wrap, no JSON, just the commands.`;
+
+          currentConfig = await generateWithAI([
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Original Config:\n${currentConfig}\n\nTerminal Error Output:\n${output}` }
+          ]);
+          
+          attempts++;
+        } else {
+          status = 'success';
+          break; // Success, exit retry loop
+        }
+      } catch (err: any) {
+        output = err.message || 'SSH Connection Failed';
         status = 'failed';
-        // Note: Auto-Remediation hook would go here in step 6.4
-      } else {
-        status = 'success';
+        break; // Hard SSH error, don't just retry bad config
       }
-    } catch (err: any) {
-      output = err.message || 'SSH Connection Failed';
-      status = 'failed';
+    }
+
+    if (attempts >= MAX_REMEDIATION_ATTEMPTS && status !== 'success') {
+       status = 'failed';
+       output += '\n\n[System] AI Remediation failed after maximum attempts.';
     }
 
     // Capture the raw terminal output in MongoDB
