@@ -20,11 +20,15 @@ const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
 type RFState = {
   nodes: Node[];
   edges: Edge[];
+  configs: Record<string, string>; // Maps nodeId -> raw config string
+  selectedNodeId: string | null;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
+  setConfig: (nodeId: string, config: string) => void;
+  setSelectedNodeId: (nodeId: string | null) => void;
   syncNodeChanges: (changes: NodeChange[]) => void;
   syncEdgeChanges: (changes: EdgeChange[]) => void;
   syncConnectEdge: (connection: Connection | Edge) => void;
@@ -53,6 +57,8 @@ const useStore = create<RFState>((set, get) => {
   return {
     nodes: [],
     edges: [],
+    configs: {},
+    selectedNodeId: null,
     onNodesChange: (changes: NodeChange[]) => {
       set({
         nodes: applyNodeChanges(changes, get().nodes),
@@ -79,6 +85,14 @@ const useStore = create<RFState>((set, get) => {
     },
     setEdges: (edges: Edge[]) => {
       set({ edges });
+    },
+    setConfig: (nodeId: string, config: string) => {
+      set((state) => ({
+        configs: { ...state.configs, [nodeId]: config }
+      }));
+    },
+    setSelectedNodeId: (nodeId: string | null) => {
+      set({ selectedNodeId: nodeId });
     },
     // Useful for full state overwrites later
     syncNodeChanges: (changes) => set({ nodes: applyNodeChanges(changes, get().nodes) }),

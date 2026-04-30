@@ -5,6 +5,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
 import aiRoutes from './routes/aiRoutes';
+import discoveryRoutes from './routes/discoveryRoutes';
+import deployRoutes from './routes/deployRoutes';
 
 dotenv.config();
 
@@ -25,6 +27,8 @@ app.use(express.json());
 
 // API Routes
 app.use('/api/ai', aiRoutes);
+app.use('/api/discover-topology', discoveryRoutes);
+app.use('/api/deploy', deployRoutes);
 
 // Initialize Socket.io
 const io = new Server(server, {
