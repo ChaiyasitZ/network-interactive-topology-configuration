@@ -7,6 +7,7 @@ import connectDB from './config/db';
 import aiRoutes from './routes/aiRoutes';
 import discoveryRoutes from './routes/discoveryRoutes';
 import deployRoutes from './routes/deployRoutes';
+import logsRoutes from './routes/logsRoutes';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use(express.json());
 app.use('/api/ai', aiRoutes);
 app.use('/api/discover-topology', discoveryRoutes);
 app.use('/api/deploy', deployRoutes);
+app.use('/api/logs', logsRoutes);
 
 // Initialize Socket.io
 const io = new Server(server, {

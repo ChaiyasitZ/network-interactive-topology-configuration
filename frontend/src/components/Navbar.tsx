@@ -3,26 +3,45 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Globe, LogOut } from "lucide-react";
+import { Moon, Sun, Globe, LogOut, LayoutDashboard, Route as RouteIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [lang, setLang] = useState('EN');
+  const pathname = usePathname();
 
   useEffect(() => setMounted(true), []);
 
   return (
     <nav className="flex items-center justify-between px-6 py-3 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm transition-colors duration-300">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">
-          N
+      <div className="flex items-center gap-8">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-md bg-blue-600 group-hover:bg-blue-700 flex items-center justify-center text-white font-bold shadow-md transition-colors">
+            N
+          </div>
+          <span className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            NetCanvas
+          </span>
+        </Link>
+
+        {/* Global Navigation Links */}
+        <div className="flex items-center gap-2">
+          <Link href="/">
+            <span className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${pathname === '/' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+              <RouteIcon className="w-4 h-4" /> Canvas
+            </span>
+          </Link>
+          <Link href="/dashboard">
+            <span className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${pathname === '/dashboard' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
+              <LayoutDashboard className="w-4 h-4" /> Dashboard
+            </span>
+          </Link>
         </div>
-        <span className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          NetCanvas
-        </span>
       </div>
       
       <div className="flex items-center gap-4">

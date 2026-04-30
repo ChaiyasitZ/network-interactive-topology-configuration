@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { deployConfigurations } from '../controllers/deployController';
+import { deployConfigurations, rollbackConfiguration } from '../controllers/deployController';
 
 const router = Router();
 
 router.post('/', deployConfigurations);
+router.post('/rollback', rollbackConfiguration);
 
 export default router;

@@ -62,3 +62,42 @@ export const pushConfiguration = (
     });
   });
 };
+
+export const fetchConfiguration = (
+  host: string,
+  port: number = 22,
+  username: string,
+  password?: string,
+  privateKey?: string
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const conn = new Client();
+    let output = '';
+
+    conn.on('ready', () => {
+      conn.exec('show running-config', (err, stream) => {
+        if (err) {
+          conn.end();
+          return reject(err);
+        }
+        stream.on('close', () => {
+          conn.end();
+          resolve(output);
+        }).on('data', (data: any) => {
+          output += data.toString();
+        }).stderr.on('data', (data: any) => {
+          output += data.toString();
+        });
+      });
+    }).on('error', (err) => {
+      reject(err);
+    }).connect({
+      host,
+      port,
+      username,
+      password,
+      privateKey,
+      readyTimeout: 10000,
+    });
+  });
+};

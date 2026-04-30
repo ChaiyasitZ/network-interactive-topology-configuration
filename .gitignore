@@ -33,3 +33,4 @@ backend/build/
 *.sln
 *.sw?
 .DS_Store
+E2E-TEST-PLAN.md
